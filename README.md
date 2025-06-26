@@ -18,7 +18,7 @@ An interactive web tool that generates beautiful linear gradients using randomly
 
 ## 🚀 Live Demo
 
-
+- https://cssgg.netlify.app/
 
 ## 🛠️ Tech Stack
 
