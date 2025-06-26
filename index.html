@@ -1,0 +1,3459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Gradient Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --dark: #1e1e24;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .gradient-box {
+            width: 100%;
+            height: 300px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .code-block {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            position: relative;
+            height: 100px;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .controls {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .animate-gradient {
+            animation: gradientFlow 8s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .loading-bar {
+            height: 4px;
+            width: 0%;
+            background: var(--primary);
+            position: fixed;
+            top: 0;
+            left: 0;
+            animation: loading 2s ease forwards;
+            z-index: 100;
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10 lg:p-12">
+    <div class="loading-bar"></div>
+    
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 text-center fade-in" style="animation-delay: 0.1s;">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Gradient Generator With Code</h1>
+            <p class="text-gray-600">Thousands of gradients just a click away!</p>
+        </header>
+        
+        <main class="fade-in" style="animation-delay: 0.2s;">
+            <div class="gradient-box mb-6 animate-gradient" id="gradientBox"></div>
+            
+            <div class="controls mb-8">
+                <button onclick="generateGradient()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex-1 min-w-[200px]">
+                    Generate New Gradient
+                </button>
+                <button onclick="toggleAnimation()" id="animationBtn" class="px-6 py-3 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex-1 min-w-[200px]">
+                    Enable Animation
+                </button>
+                <button onclick="shuffleCurrentColors()" class="px-6 py-3 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex-1 min-w-[200px]">
+                    Shuffle Colors
+                </button>
+                <button onclick="lockGradient()" id="lockBtn" class="px-6 py-3 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex-1 min-w-[200px]">
+                    Lock Gradient (Auto Change)
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">Hex Codes</h2>
+                    <div class="code-block relative">
+                        <button class="copy-btn" onclick="copyCode('hexCode')">Copy</button>
+                        <code id="hexCode">#ff9966, #ff5e62</code>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">CSS with Animation</h2>
+                    <div class="code-block relative">
+                        <button class="copy-btn" onclick="copyCode('cssAnimatedCode')">Copy</button>
+                        <code id="cssAnimatedCode">background: linear-gradient(to right, #ff9966, #ff5e62);
+background-size: 200% 200%;
+animation: gradientFlow 8s ease infinite;</code>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">Inline Style</h2>
+                    <div class="code-block relative">
+                        <button class="copy-btn" onclick="copyCode('inlineCode')">Copy</button>
+                        <code id="inlineCode">style="background: linear-gradient(to right, #ff9966, #ff5e62);"</code>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">Tailwind CSS</h2>
+                    <div class="code-block relative">
+                        <button class="copy-btn" onclick="copyCode('tailwindCode')">Copy</button>
+                        <code id="tailwindCode">class="bg-gradient-to-r from-[#ff9966] to-[#ff5e62]"</code>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="mt-12 text-center text-gray-500 text-sm fade-in" style="animation-delay: 0.3s;">
+            <p>Press "Lock Gradient" to enable automatic gradient cycling every 3 seconds</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Initial loading animation
+        setTimeout(() => {
+            document.querySelector('.loading-bar').style.opacity = '0';
+        }, 2000);
+        
+        // Available color palettes for gradients
+        const colorPalettes = [
+            ['#ff9a9e', '#fad0c4'], // Soft pink
+            ['#ffecd2', '#fcb69f'], // Peach
+            ['#ff8177', '#ff867a'], // Sunset
+            ['#43e97b', '#38f9d7'], // Fresh
+            ['#a18cd1', '#fbc2eb'], // Purple
+            ['#8e2de2', '#4a00e0'], // Vivid
+            ['#13547a', '#80d0c7'], // Ocean
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#f83600', '#f9d423'], // Fiery
+            ['#30cfd0', '#330867'], // Deep Blue
+            ['#c471f5', '#fa71cd'], // Neon
+            ['#48c6ef', '#6f86d6'], // Sky
+            ['#feada6', '#f5efef'], // Soft
+            ['#7028e4', '#e5b2ca'], // Intense
+            ['#00c6fb', '#005bea'], // Water
+            ['#0ba360', '#3cba92'], // Green
+            ['#ff4b1f', '#1fddff'], // Warm to cool
+            ['#ff75b5', '#ffb86c'], // Dream
+            ['#6a11cb', '#2575fc'], // Royal
+            ['#3a1c71', '#d76d77', '#ffaf7b'], // Passion
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#00c6ff', '#0072ff'], // Blue
+            ['#ff6a00', '#ee0979'], // Sunset Orange
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+            ['#ffafbd', '#ffc3a0'], // Light Coral
+            ['#fbc2eb', '#a6c1ee'], // Pastel
+            ['#ff9a9e', '#fad0c4'], // Light Pink
+            ['#f9d423', '#ff4e50'], // Warm
+            ['#00c6ff', '#0072ff'], // Bright Blue
+            ['#ff758c', '#ff7eb3'], // Pink
+            ['#ff6a00', '#ee0979'], // Sunset
+            ['#ff4b1f', '#1fddff'], // Warm to Cool
+            ['#00c6fb', '#005bea'], // Water
+            ['#ff5f6d', '#ffc371'], // Coral
+        ];
+        
+        let currentGradient = '';
+        let animationEnabled = false;
+        let autoChangeInterval = null;
+        let gradientDirection = 'to right';
+        let currentColors = ['#ff9966', '#ff5e62'];
+        
+        // Generate random gradient on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            generateGradient();
+            
+            // Initialize animation for the first time
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    el.style.opacity = '1';
+                });
+            }, 100);
+        });
+        
+        function toggleAnimation() {
+            const gradientBox = document.getElementById('gradientBox');
+            const animationBtn = document.getElementById('animationBtn');
+            
+            if (animationEnabled) {
+                gradientBox.classList.remove('animate-gradient');
+                animationBtn.textContent = 'Enable Animation';
+                animationBtn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+                animationBtn.classList.add('bg-white', 'text-gray-800', 'border', 'border-gray-300');
+            } else {
+                gradientBox.classList.add('animate-gradient');
+                animationBtn.textContent = 'Disable Animation';
+                animationBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+                animationBtn.classList.remove('bg-white', 'text-gray-800', 'border', 'border-gray-300');
+            }
+            
+            animationEnabled = !animationEnabled;
+            updateCodeBlocks();
+        }
+        
+        function lockGradient() {
+            const lockBtn = document.getElementById('lockBtn');
+            
+            if (autoChangeInterval) {
+                clearInterval(autoChangeInterval);
+                autoChangeInterval = null;
+                lockBtn.textContent = 'Lock Gradient (Auto Change)';
+                lockBtn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+                lockBtn.classList.add('bg-white', 'text-gray-800', 'border', 'border-gray-300');
+            } else {
+                autoChangeInterval = setInterval(generateGradient, 3000);
+                lockBtn.textContent = 'Unlock Gradient';
+                lockBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+                lockBtn.classList.remove('bg-white', 'text-gray-800', 'border', 'border-gray-300');
+            }
+        }
+        
+        function generateGradient() {
+            // Randomly select a palette
+            const palette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+            currentColors = [...palette];
+            
+            // Create gradient string
+            currentGradient = `linear-gradient(${gradientDirection}, ${palette.join(', ')})`;
+            
+            // Apply to gradient box
+            applyGradient();
+            
+            // Update code blocks
+            updateCodeBlocks();
+        }
+        
+        function shuffleCurrentColors() {
+            // Create a shuffled version of current colors
+            const shuffled = [...currentColors];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            currentColors = shuffled;
+            currentGradient = `linear-gradient(${gradientDirection}, ${shuffled.join(', ')})`;
+            applyGradient();
+            updateCodeBlocks();
+        }
+        
+        function applyGradient() {
+            const gradientBox = document.getElementById('gradientBox');
+            gradientBox.style.background = currentGradient;
+            
+            // Add pulsing animation for new gradient
+            gradientBox.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                gradientBox.style.transform = 'scale(1)';
+            }, 300);
+        }
+        
+        function updateCodeBlocks() {
+            // Hex Codes
+            document.getElementById('hexCode').textContent = currentColors.join(', ');
+                
+            // CSS with Animation
+            document.getElementById('cssAnimatedCode').textContent = 
+                `background: ${currentGradient};
+background-size: 200% 200%;
+animation: gradientFlow 8s ease infinite;
+  
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}`;
+                
+            // Inline Style
+            document.getElementById('inlineCode').textContent = 
+                `style="background: ${currentGradient};"`;
+                
+            // Tailwind CSS
+            document.getElementById('tailwindCode').textContent = 
+                `class="bg-gradient-to-${gradientDirection.replace(/ /g, '-')} ${currentColors.map(c => `from-[${c}]`).join(' ')}"`;
+        }
+        
+        function copyCode(elementId) {
+            const codeElement = document.getElementById(elementId);
+            navigator.clipboard.writeText(codeElement.textContent);
+            
+            // Show copied feedback
+            const buttons = document.querySelectorAll('.copy-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent === 'Copied!') {
+                    btn.textContent = 'Copy';
+                }
+            });
+            event.target.textContent = 'Copied!';
+        }
+    </script>
+</body>
+</html>
