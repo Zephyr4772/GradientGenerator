@@ -2,8 +2,6 @@
 
 An interactive web tool that generates beautiful linear gradients using randomly generated hex colors. With just a click, preview dynamic gradients, copy the CSS code, and toggle animations.
 
-![gradient-preview](preview.png) <!-- Optional image -->
-
 ## 🌟 Features
 
 - 🔀 **Random 2- or 3-color gradients**
@@ -31,6 +29,6 @@ An interactive web tool that generates beautiful linear gradients using randomly
 To run locally:
 
 ```bash
-git clone https://github.com/your-username/gradient-generator.git
-cd gradient-generator
+git clone https://github.com/Zephyr4772/GradientGenerator.git
+cd GradientGenerator
 open index.html
